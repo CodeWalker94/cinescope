@@ -36,7 +36,7 @@ const FAQSection = () => {
         id: "privacy",
         question: "Does CineScope track me?",
         answer:
-          "CineScope is built to keep your privacy a priorityin mind. Your likes, dislikes, and saved items are used to improve your experience, not to sell your information. You control what you save and what you keep.",
+          "CineScope is built to keep your privacy a priority in mind. Your likes, dislikes, and saved items are used to improve your experience, not to sell your information. You control what you save and what you keep.",
       },
       {
         id: "feedback",
