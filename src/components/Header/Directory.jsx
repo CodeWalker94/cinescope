@@ -11,19 +11,19 @@ const Directory = ({ layout = "horizontal" }) => {
     <div>
       <ul className={`${layoutClasses} ${baseClasses}`}>
         <li>
-          <h3>
-            <a href="">Movies</a>
-          </h3>
+          <a href="#" onClick={(e) => e.preventDefault()}>
+            Movies
+          </a>
         </li>
         <li>
-          <h3>
-            <a href="">TV Shows</a>
-          </h3>
+          <a href="#" onClick={(e) => e.preventDefault()}>
+            TV Shows
+          </a>
         </li>
         <li>
-          <h3>
-            <a href="">Animated</a>
-          </h3>
+          <a href="#" onClick={(e) => e.preventDefault()}>
+            Animated
+          </a>
         </li>
       </ul>
     </div>
