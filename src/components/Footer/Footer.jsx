@@ -16,16 +16,16 @@ const SECONDARY_LINKS = [
   { label: "Contact", href: "#" },
 ];
 
+const year = new Date().getFullYear();
+const language = "English";
+
+const pillClassName =
+  "inline-flex items-center justify-center rounded-full px-4 py-2 text-xs sm:text-sm font-semibold uppercase tracking-[0.16em] text-white/90 transition-colors duration-200 hover:bg-cine-highlight/60 hover:text-cine-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-cine-highlight/60";
+
+const secondaryPillClassName =
+  "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm text-cine-muted transition-colors duration-200 hover:bg-cine-highlight/60 hover:text-cine-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-cine-highlight/60";
+
 const Footer = () => {
-  const year = new Date().getFullYear();
-  const language = "English";
-
-  const pillClassName =
-    "inline-flex items-center justify-center rounded-full px-4 py-2 text-xs sm:text-sm font-semibold uppercase tracking-[0.16em] text-white/90 transition-colors duration-200 hover:bg-cine-highlight/60 hover:text-cine-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-cine-highlight/60";
-
-  const secondaryPillClassName =
-    "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm text-cine-muted transition-colors duration-200 hover:bg-cine-highlight/60 hover:text-cine-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-cine-highlight/60";
-
   return (
     <footer className="relative w-full border-t border-white/5 bg-cine-bg">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/30 to-transparent" />

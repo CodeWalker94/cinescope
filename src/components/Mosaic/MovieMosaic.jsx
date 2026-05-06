@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPosterPathForTitle } from "../../API/tmdb";
+import { shuffle } from "../../utils/titleHelpers";
 
 // Curated, static list – mix of movies, TV & animation
 const MOSAIC_ITEMS = [
@@ -11,10 +12,13 @@ const MOSAIC_ITEMS = [
   { title: "Barbie", mediaType: "movie" },
   { title: "Top Gun: Maverick", mediaType: "movie" },
   { title: "Spider-Man: No Way Home", mediaType: "movie" },
-  { title: "Star Wars: The Force Awakens", mediaType: "movie" }, 
+  { title: "Star Wars: The Force Awakens", mediaType: "movie" },
   { title: "Black Panther", mediaType: "movie" },
   { title: "John Wick: Chapter 4", mediaType: "movie" },
-  { title: "The Lord of the Rings: The Fellowship of the Ring", mediaType: "movie" },
+  {
+    title: "The Lord of the Rings: The Fellowship of the Ring",
+    mediaType: "movie",
+  },
   { title: "Toy Story 3", mediaType: "movie" },
 
   // TV
@@ -30,49 +34,35 @@ const MOSAIC_ITEMS = [
   { title: "Spider-Man: Across the Spider-Verse", mediaType: "movie" },
   { title: "The Super Mario Bros. Movie", mediaType: "movie" },
   { title: "Frozen", mediaType: "movie" },
-  { title: "Demon Slayer: Kimetsu no Yaiba – The Movie: Mugen Train", mediaType: "movie" },
+  {
+    title: "Demon Slayer: Kimetsu no Yaiba – The Movie: Mugen Train",
+    mediaType: "movie",
+  },
   { title: "Elemental", mediaType: "movie" },
 
   // Extras / newer stuff
   { title: "Wonka", mediaType: "movie" },
-  { title: "Mission: Impossible - Dead Reckoning Part One", mediaType: "movie" },
+  {
+    title: "Mission: Impossible - Dead Reckoning Part One",
+    mediaType: "movie",
+  },
   { title: "Guardians of the Galaxy Vol. 3", mediaType: "movie" },
   { title: "Blue Beetle", mediaType: "movie" },
   { title: "One Piece", mediaType: "tv" }, // Netflix live action
   { title: "Godzilla Minus One", mediaType: "movie" },
 ];
 
-const SHUFFLE_INTERVAL = 7000; // 7 seconds
-const FADE_DURATION = 400;     // ms – keep in sync with Tailwind duration
-
+const SHUFFLE_INTERVAL = 7000; 
+const FADE_DURATION = 400; 
 const buildImageUrl = (posterPath) =>
   posterPath ? `https://image.tmdb.org/t/p/w342${posterPath}` : null;
 
-// Fisher–Yates shuffle using Math.random() / Math.floor()
-const shuffleArray = (arr) => {
-  const copy = [...arr];
-
-  for (let currentIndex = copy.length - 1; currentIndex > 0; currentIndex--) {
-    const randomIndex = Math.floor(Math.random() * (currentIndex + 1));
-    [copy[currentIndex], copy[randomIndex]] = [
-      copy[randomIndex],
-      copy[currentIndex],
-    ];
-  }
-
-  return copy;
-};
-
-
 const MovieMosaic = () => {
-  // All fetched posters (static set of 30)
   const [posters, setPosters] = useState([]);
-  // Posters currently being shown (same items, different order)
   const [visiblePosters, setVisiblePosters] = useState([]);
-  // For fade-out / fade-in transition
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-   // 1) Fetch poster paths once from TMDB
+  // 1) Fetch poster paths once from TMDB
   useEffect(() => {
     let cancelled = false;
 
@@ -82,7 +72,7 @@ const MovieMosaic = () => {
           MOSAIC_ITEMS.map(async (item) => {
             const posterPath = await getPosterPathForTitle(
               item.title,
-              item.mediaType
+              item.mediaType,
             );
             const url = buildImageUrl(posterPath);
 
@@ -92,7 +82,7 @@ const MovieMosaic = () => {
               title: item.title,
               url,
             };
-          })
+          }),
         );
 
         if (!cancelled) {
@@ -123,7 +113,7 @@ const MovieMosaic = () => {
       setIsTransitioning(true);
 
       timeoutId = setTimeout(() => {
-        const shuffled = shuffleArray(posters);
+        const shuffled = shuffle(posters);
         setVisiblePosters(shuffled);
         // fade back in
         setIsTransitioning(false);
@@ -145,7 +135,7 @@ const MovieMosaic = () => {
 
   return (
     <div
-     style={{ overflowAnchor: "none" }} // Prevents browser from scroll anchoring
+      style={{ overflowAnchor: "none" }} // Prevents browser from scroll anchoring
       className={`
         w-full h-full
         transition-opacity duration-500 ease-out

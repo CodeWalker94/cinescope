@@ -583,6 +583,38 @@
   @apply transition-all duration-300 ease-in-out;
 }
 
+/* ==============================================================
+   SKELETON CARD
+============================================================== */
+@layer components {
+  .skeleton-card {
+    @apply w-[44vw] max-w-[190px] shrink-0 rounded-2xl overflow-hidden bg-white/5;
+    @apply sm:w-[30vw] sm:max-w-[210px] md:w-[220px] lg:w-[230px];
+    aspect-ratio: 2 / 3;
+  }
+
+  .skeleton-card__shimmer {
+    @apply w-full h-full rounded-2xl;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-sweep 1.6s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-sweep {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+}
+
 @utility glow-border {
   box-shadow: 0 0 10px rgba(0, 216, 255, 0.3);
 }

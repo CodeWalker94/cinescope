@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus } from "lucide-react";
+import { useKey } from "../../hooks/useKey";
 
 const AddToPlaylistMenu = ({ anchorRef, onAddToCollection, onClose }) => {
   const menuRef = useRef(null);
@@ -18,7 +19,7 @@ const AddToPlaylistMenu = ({ anchorRef, onAddToCollection, onClose }) => {
     const viewportW = window.innerWidth || 0;
     const clampedLeft = Math.min(
       Math.max(rect.right, menuWidth + margin),
-      Math.max(margin, viewportW - margin)
+      Math.max(margin, viewportW - margin),
     );
 
     setPos({ top: rect.top, left: clampedLeft });
@@ -47,25 +48,14 @@ const AddToPlaylistMenu = ({ anchorRef, onAddToCollection, onClose }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anchorRef, menuWidth]);
 
+  useKey("Escape", () => onClose?.());
+
   useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose?.();
-    };
-
     const onPointerDown = (e) => {
-      if (!menuRef.current) return;
-      if (!menuRef.current.contains(e.target)) {
-        onClose?.();
-      }
+      if (!menuRef.current?.contains(e.target)) onClose?.();
     };
-
-    window.addEventListener("keydown", onKeyDown);
     window.addEventListener("pointerdown", onPointerDown);
-
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("pointerdown", onPointerDown);
-    };
+    return () => window.removeEventListener("pointerdown", onPointerDown);
   }, [onClose]);
 
   return createPortal(
@@ -120,7 +110,7 @@ const AddToPlaylistMenu = ({ anchorRef, onAddToCollection, onClose }) => {
         Add to collection
       </button>
     </div>,
-    document.body
+    document.body,
   );
 };
 

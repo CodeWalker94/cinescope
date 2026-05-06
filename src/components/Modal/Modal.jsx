@@ -1,77 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ThumbsDown, ThumbsUp, X, Plus } from "lucide-react";
 
-import { getTitleCredits, getTitleDetails } from "../../API/tmdb";
+import { useModalData } from "../../hooks/useModalData";
+import { useKey } from "../../hooks/useKey";
 
-const TMDB_IMG_ORIGINAL = "https://image.tmdb.org/t/p/original";
-const TMDB_IMG_W342 = "https://image.tmdb.org/t/p/w342";
 const TMDB_IMG_W185 = "https://image.tmdb.org/t/p/w185";
 
 // eslint doesn't always mark `motion.*` JSX member expressions as “used”
 // unless we reference `motion` in normal JS.
 const MotionDiv = motion.div;
-
-const RATINGS_STORAGE_KEY = "cinescope:ratings";
-
-const safeJsonParse = (value, fallback) => {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return fallback;
-  }
-};
-
-const getTitleText = (data) =>
-  data?.title ||
-  data?.name ||
-  data?.original_title ||
-  data?.original_name ||
-  "Untitled";
-
-const getYearText = (data) => {
-  const date = data?.release_date || data?.first_air_date || "";
-  return date ? String(date).slice(0, 4) : "";
-};
-
-const formatRuntime = (minutes) => {
-  if (typeof minutes !== "number" || !Number.isFinite(minutes) || minutes <= 0)
-    return "";
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (!h) return `${m}m`;
-  if (!m) return `${h}h`;
-  return `${h}h ${m}m`;
-};
-
-const formatScore = (voteAverage) => {
-  if (typeof voteAverage !== "number") return "";
-  return voteAverage.toFixed(1);
-};
-
-const getRatingKey = (mediaType, id) => `${mediaType}:${id}`;
-
-const readStoredRating = (mediaType, id) => {
-  if (!mediaType || !id) return "neutral";
-  const raw = localStorage.getItem(RATINGS_STORAGE_KEY);
-  const map = safeJsonParse(raw, {});
-  const value = map?.[getRatingKey(mediaType, id)];
-  if (value === "like" || value === "dislike") return value;
-  return "neutral";
-};
-
-const writeStoredRating = (mediaType, id, rating) => {
-  if (!mediaType || !id) return;
-  const raw = localStorage.getItem(RATINGS_STORAGE_KEY);
-  const map = safeJsonParse(raw, {});
-  const key = getRatingKey(mediaType, id);
-  const next = { ...map };
-
-  if (rating === "neutral") delete next[key];
-  else next[key] = rating;
-
-  localStorage.setItem(RATINGS_STORAGE_KEY, JSON.stringify(next));
-};
 
 const IconButton = ({ active, label, onClick, children }) => {
   return (
@@ -142,73 +80,37 @@ const Modal = ({ isOpen, onClose, selection }) => {
   const id = selection?.id;
   const mediaType = selection?.mediaType || "movie";
 
-  const [details, setDetails] = useState(null);
-  const [credits, setCredits] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
-
-  const [rating, setRating] = useState("neutral"); // neutral | like | dislike
+  // UI-only state — the data layer lives in the hook below
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
   const [canExpandOverview, setCanExpandOverview] = useState(false);
   const [isCastExpanded, setIsCastExpanded] = useState(false);
 
-  const titleText = useMemo(
-    () => getTitleText(details || selection),
-    [details, selection]
-  );
-  const yearText = useMemo(
-    () => getYearText(details || selection),
-    [details, selection]
-  );
-
-  const backdropUrl = useMemo(() => {
-    const path = details?.backdrop_path || selection?.backdrop_path;
-    return path ? `${TMDB_IMG_ORIGINAL}${path}` : null;
-  }, [details, selection]);
-
-  const posterUrl = useMemo(() => {
-    const path = details?.poster_path || selection?.poster_path;
-    return path ? `${TMDB_IMG_W342}${path}` : null;
-  }, [details, selection]);
-
-  const genresText = useMemo(() => {
-    const list = details?.genres;
-    if (!Array.isArray(list) || list.length === 0) return "";
-    return list
-      .slice(0, 4)
-      .map((g) => g?.name)
-      .filter(Boolean)
-      .join(" • ");
-  }, [details]);
-
-  const runtimeText = useMemo(() => {
-    if (!details) return "";
-    if (mediaType === "tv") {
-      const seasons = details?.number_of_seasons;
-      if (typeof seasons === "number")
-        return `${seasons} season${seasons === 1 ? "" : "s"}`;
-
-      const ep = Array.isArray(details?.episode_run_time)
-        ? details.episode_run_time[0]
-        : null;
-      return ep ? `${formatRuntime(ep)} per ep` : "";
-    }
-    return formatRuntime(details?.runtime);
-  }, [details, mediaType]);
-
-  const scoreText = useMemo(
-    () => formatScore(details?.vote_average ?? selection?.vote_average),
-    [details, selection]
-  );
-
-  const cast = useMemo(() => {
-    const list = credits?.cast;
-    if (!Array.isArray(list)) return [];
-    return list.slice(0, 10);
-  }, [credits]);
+  const {
+    details,
+    isLoading,
+    hasError,
+    rating,
+    handleThumbUp,
+    handleThumbDown,
+    titleText,
+    yearText,
+    backdropUrl,
+    posterUrl,
+    genresText,
+    runtimeText,
+    scoreText,
+    cast,
+  } = useModalData({ isOpen, id, mediaType, selection });
 
   const canExpandCast = cast.length > 4;
   const visibleCast = isCastExpanded ? cast : cast.slice(0, 4);
+
+  // Reset UI state whenever a new title is opened
+  useEffect(() => {
+    if (!isOpen) return;
+    setIsOverviewExpanded(false);
+    setIsCastExpanded(false);
+  }, [isOpen, id]);
 
   // Scroll lock
   useEffect(() => {
@@ -217,67 +119,10 @@ const Modal = ({ isOpen, onClose, selection }) => {
     return () => document.body.classList.remove("overflow-hidden");
   }, [isOpen]);
 
-  // ESC close
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose?.();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, onClose]);
-
-  // Persisted rating load when opened / selection changes
-  useEffect(() => {
-    if (!isOpen || !id) return;
-    setRating(readStoredRating(mediaType, id));
-  }, [isOpen, id, mediaType]);
-
-  // Fetch details + credits
-  useEffect(() => {
-    if (!isOpen || !id) return;
-
-    let cancelled = false;
-    setIsLoading(true);
-    setHasError(false);
-    setIsOverviewExpanded(false);
-    setIsCastExpanded(false);
-
-    (async () => {
-      try {
-        const [d, c] = await Promise.all([
-          getTitleDetails(id, mediaType),
-          getTitleCredits(id, mediaType),
-        ]);
-
-        if (cancelled) return;
-        setDetails(d);
-        setCredits(c);
-      } catch (err) {
-        console.error("Modal details fetch error", err);
-        if (!cancelled) setHasError(true);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen, id, mediaType]);
-
-  const setAndPersistRating = (next) => {
-    setRating(next);
-    writeStoredRating(mediaType, id, next);
-  };
-
-  const handleThumbUp = () => {
-    setAndPersistRating(rating === "like" ? "neutral" : "like");
-  };
-
-  const handleThumbDown = () => {
-    setAndPersistRating(rating === "dislike" ? "neutral" : "dislike");
-  };
+  // Close on ESC
+  useKey("Escape", () => {
+    if (isOpen) onClose?.();
+  });
 
   const overviewText =
     details?.overview ||

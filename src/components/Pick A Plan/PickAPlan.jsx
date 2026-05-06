@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PlanToggle from "./PlanToggle";
 
-// Pricing for each billing period
 const PRICES = {
   monthly: {
     label: "Monthly",
@@ -18,6 +17,11 @@ const PRICES = {
     essential: "89.99",
     cta: "Try 1 week free",
   },
+};
+
+const PLANS = {
+  premium: { name: "Premium", tag: "Best for movie lovers & families" },
+  essential: { name: "Essential", tag: "Great value starter plan" },
 };
 
 // Feature rows for the table
@@ -75,17 +79,8 @@ const PickAPlan = () => {
   const [selectedPlan, setSelectedPlan] = useState("premium"); // "premium" | "essential"
 
   const currentPricing = PRICES[billingPeriod];
-
-  const selectedPlanName = selectedPlan === "premium" ? "Premium" : "Essential";
-  const selectedPlanTag =
-    selectedPlan === "premium"
-      ? "Best for movie lovers & families"
-      : "Great value starter plan";
-
-  const selectedPlanPrice =
-    selectedPlan === "premium"
-      ? currentPricing.premium
-      : currentPricing.essential;
+  const { name: selectedPlanName, tag: selectedPlanTag } = PLANS[selectedPlan];
+  const selectedPlanPrice = currentPricing[selectedPlan];
 
   const handleCta = () => {
     navigate("/plans");

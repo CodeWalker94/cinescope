@@ -12,8 +12,8 @@ const TopRow = ({ trending, onChangeHero }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-  // Cache of full details keyed by TMDB id
-  const [detailsCache, setDetailsCache] = useState({});
+  // Cache of full details keyed by TMDB id (not UI state — useRef avoids re-renders)
+  const detailsCacheRef = useRef({});
 
   // Ref to the whole section (for visibility)
   const sectionRef = useRef(null);
@@ -31,13 +31,20 @@ const TopRow = ({ trending, onChangeHero }) => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          // visible if at least ~25% of the section is in view
-          setIsRowVisible(entry.isIntersecting);
+          if (entry.isIntersecting) {
+            setIsRowVisible(true);
+          } else {
+            // Only pause when the user has scrolled PAST the section (it's above
+            // the viewport). If it's below the fold (not yet reached), keep rotating
+            // so the Hero above it keeps updating.
+            const scrolledPast = entry.boundingClientRect.bottom < 0;
+            setIsRowVisible(!scrolledPast);
+          }
         });
       },
       {
         threshold: 0.25,
-      }
+      },
     );
 
     observer.observe(sectionEl);
@@ -139,7 +146,7 @@ const TopRow = ({ trending, onChangeHero }) => {
     let cancelled = false;
 
     const loadDetails = async () => {
-      const cached = detailsCache[movie.id];
+      const cached = detailsCacheRef.current[movie.id];
       if (cached) {
         onChangeHero(cached);
         return;
@@ -153,10 +160,7 @@ const TopRow = ({ trending, onChangeHero }) => {
 
         if (cancelled) return;
 
-        setDetailsCache((prev) => ({
-          ...prev,
-          [movie.id]: details,
-        }));
+        detailsCacheRef.current[movie.id] = details;
 
         onChangeHero(details);
       } catch (err) {
@@ -172,7 +176,7 @@ const TopRow = ({ trending, onChangeHero }) => {
     return () => {
       cancelled = true;
     };
-  }, [activeIndex, trending, detailsCache, onChangeHero]);
+  }, [activeIndex, trending, onChangeHero]);
 
   // When user clicks a card / dot
   const handleActive = (index) => {
@@ -192,7 +196,7 @@ const TopRow = ({ trending, onChangeHero }) => {
     if (movies.length <= 1) return;
 
     const prefersReduced = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
 
     if (prefersReduced) return;

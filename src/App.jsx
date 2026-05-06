@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "./components/Header/Header.jsx";
+import PageLayout from "./components/Utility Components/PageLayout.jsx";
 
 import TopRow from "./components/Hero/TopRow.jsx";
 import Hero from "./components/Hero/Hero.jsx";
@@ -10,8 +11,9 @@ import PickAPlan from "./components/Pick A Plan/PickAPlan.jsx";
 import BrowseSection from "./components/Browse Categories/BrowseSection.jsx";
 import FAQSection from "./components/FAQ/FAQSection.jsx";
 import Footer from "./components/Footer/Footer.jsx";
-import { getTrending } from "./API/tmdb";
+import { getTrendingTitles } from "./API/tmdb";
 import Modal from "./components/Modal/Modal.jsx";
+import ScrollReveal from "./components/Utility Components/ScrollReveal.jsx";
 
 const App = () => {
   const [trending, setTrending] = useState([]);
@@ -23,7 +25,7 @@ const App = () => {
   useEffect(() => {
     const loadTrendingMovies = async () => {
       try {
-        const data = await getTrending();
+        const data = await getTrendingTitles();
         setTrending(data);
         setHeroMovie(data[0]); // set first hero bg immediately
       } catch (err) {
@@ -48,7 +50,7 @@ const App = () => {
   };
 
   return (
-    <main className="relative">
+    <PageLayout>
       <Header className="absolute top-0 left-0 w-full z-40" />
 
       <Hero movie={heroMovie}>
@@ -59,18 +61,28 @@ const App = () => {
         <TopRow trending={trending} onChangeHero={setHeroMovie} />
       </section>
 
-      <ExploreSection />
-      <PickAPlan />
-      <BrowseSection onOpenDetails={openTitleModal} />
-      <FAQSection />
-      <Footer />
+      <ScrollReveal>
+        <ExploreSection />
+      </ScrollReveal>
+      <ScrollReveal delay={0.1}>
+        <PickAPlan />
+      </ScrollReveal>
+      <ScrollReveal delay={0.1}>
+        <BrowseSection onOpenDetails={openTitleModal} />
+      </ScrollReveal>
+      <ScrollReveal delay={0.1}>
+        <FAQSection />
+      </ScrollReveal>
+      <ScrollReveal delay={0.1}>
+        <Footer />
+      </ScrollReveal>
 
       <Modal
         isOpen={modalOpen}
         onClose={closeTitleModal}
         selection={modalSelection}
       />
-    </main>
+    </PageLayout>
   );
 };
 

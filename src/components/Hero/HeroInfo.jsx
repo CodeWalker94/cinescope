@@ -1,25 +1,18 @@
-// HeroInfo.jsx
+import {
+  getTitle,
+  getYear,
+  formatRuntime,
+  formatScore,
+  inferMediaType,
+} from "../../utils/titleHelpers";
+
 const HeroInfo = ({ movie, onOpenDetails }) => {
   if (!movie) return null;
 
-  const title =
-    movie.title ||
-    movie.name ||
-    movie.original_title ||
-    movie.original_name ||
-    "Untitled";
-
-  const yearRaw = movie.release_date || movie.first_air_date || "";
-  const year = yearRaw ? yearRaw.slice(0, 4) : null;
-
-  const ratingNumber =
-    typeof movie.vote_average === "number" ? movie.vote_average : null;
-  const rating = ratingNumber !== null ? ratingNumber.toFixed(1) : null;
-
-  const isTv =
-    movie.media_type === "tv" ||
-    (!!movie.first_air_date && movie.media_type !== "movie");
-
+  const title = getTitle(movie);
+  const year = getYear(movie);
+  const rating = formatScore(movie.vote_average);
+  const isTv = inferMediaType(movie) === "tv";
   const mediaTypeLabel = isTv ? "Series" : "Movie";
 
   // =============================
@@ -37,34 +30,15 @@ const HeroInfo = ({ movie, onOpenDetails }) => {
 
     if (us?.release_dates?.length) {
       const withCert = us.release_dates.find(
-        (d) => d.certification && d.certification.trim() !== ""
+        (d) => d.certification && d.certification.trim() !== "",
       );
       certification = withCert?.certification || null;
     }
   }
   // =============================
 
-  let runtimeMinutes = null;
-
-  if (!isTv) {
-    runtimeMinutes = movie.runtime || null;
-  } else if (
-    Array.isArray(movie.episode_run_time) &&
-    movie.episode_run_time.length
-  ) {
-    runtimeMinutes = movie.episode_run_time[0];
-  }
-
-  const runtimeLabel =
-    typeof runtimeMinutes === "number"
-      ? (() => {
-          const h = Math.floor(runtimeMinutes / 60);
-          const m = runtimeMinutes % 60;
-          if (!h) return `${m}m`;
-          if (!m) return `${h}h`;
-          return `${h}h ${m}m`;
-        })()
-      : null;
+  const runtimeMinutes = isTv ? movie.episode_run_time?.[0] : movie.runtime;
+  const runtimeLabel = formatRuntime(runtimeMinutes) || null;
 
   const genres =
     Array.isArray(movie.genres) && movie.genres.length
@@ -77,12 +51,8 @@ const HeroInfo = ({ movie, onOpenDetails }) => {
   const overview =
     movie.overview || "No synopsis available for this title yet.";
 
-  const handleMore = () => {
-    if (typeof onOpenDetails !== "function") return;
-    const inferredMediaType =
-      movie.media_type || (movie.first_air_date ? "tv" : "movie");
-    onOpenDetails({ item: movie, mediaType: inferredMediaType });
-  };
+  const handleMore = () =>
+    onOpenDetails?.({ item: movie, mediaType: inferMediaType(movie) });
 
   return (
     <div className="hero-content max-w-5xl px-5 sm:px-10 pb-16">

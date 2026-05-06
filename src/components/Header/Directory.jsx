@@ -1,6 +1,6 @@
 const Directory = ({ layout = "horizontal" }) => {
   const baseClasses =
-    "text-lg content-center gap-8 font-medium text-[clamp(0.875rem,2vw,1rem)]";
+    "text-lg content-center font-medium text-[clamp(0.875rem,2vw,1rem)]";
 
   const layoutClasses =
     layout === "horizontal"

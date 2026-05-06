@@ -29,20 +29,13 @@ const tmdbClient = axios.create({
 export const getTrendingTitles = async (
   mediaType = "all",
   timeWindow = "week",
-  page = 1
+  page = 1,
 ) => {
   const res = await tmdbClient.get(`/trending/${mediaType}/${timeWindow}`, {
     params: { page },
   });
 
   return res.data?.results ?? [];
-};
-
-/**
- * - This returns trending for ALL media types for the week.
- */
-export const getTrending = async () => {
-  return getTrendingTitles("all", "week", 1);
 };
 
 /**
@@ -90,7 +83,7 @@ export const getTitleCredits = async (id, mediaType = "movie") => {
 export const getImagePathForTitle = async (
   title,
   mediaType = "movie",
-  imageType = "poster" // "poster" | "backdrop"
+  imageType = "poster", // "poster" | "backdrop"
 ) => {
   if (!title) return null;
 
@@ -167,12 +160,8 @@ export const discoverTitles = async ({
   page = 1,
   sortBy = "popularity.desc",
 
-  // OLD (backwards compatible)
-  genreId,
-
-  // NEW (preferred)
-  includeGenreIds, // number[]
-  excludeGenreIds, // number[]
+  includeGenreIds,
+  excludeGenreIds,
 
   // optional refiners
   minVotes,
@@ -189,21 +178,11 @@ export const discoverTitles = async ({
   // Convert keywordQuery -> keywordId once
   const keywordId = keywordQuery ? await getKeywordId(keywordQuery) : null;
 
-  /**
-   * Build "with_genres"
-   * - If includeGenreIds provided, use that.
-   * - Else fallback to old genreId.
-   */
-  let withGenres = "";
-  if (Array.isArray(includeGenreIds) && includeGenreIds.length > 0) {
-    withGenres = includeGenreIds.join(",");
-  } else if (typeof genreId === "number") {
-    withGenres = String(genreId);
-  }
+  const withGenres =
+    Array.isArray(includeGenreIds) && includeGenreIds.length > 0
+      ? includeGenreIds.join(",")
+      : "";
 
-  /**
-   * Build "without_genres"
-   */
   const withoutGenres =
     Array.isArray(excludeGenreIds) && excludeGenreIds.length > 0
       ? excludeGenreIds.join(",")

@@ -1,15 +1,9 @@
 import { useRef } from "react";
 import AddToPlaylistMenu from "./AddToPlaylistMenu";
+import { getTitle } from "../../utils/titleHelpers";
 
 const buildPosterUrl = (posterPath) =>
   posterPath ? `https://image.tmdb.org/t/p/w342${posterPath}` : null;
-
-const getTitle = (item) =>
-  item?.title ||
-  item?.name ||
-  item?.original_title ||
-  item?.original_name ||
-  "Untitled";
 
 const TitleCard = ({
   item,

@@ -1,6 +1,11 @@
 // src/components/Browse Categories/BrowseSection.jsx
 import { useEffect, useMemo, useState } from "react";
 import { getBackdropPathForTitle } from "../../API/tmdb";
+import {
+  MOVIE_GENRES,
+  TV_GENRES,
+  EXCLUDE_TV_NON_SERIES,
+} from "../../API/tmdbGenres";
 import BrowseRow from "./BrowseRow";
 
 /**
@@ -33,8 +38,10 @@ const BROWSE_TABS = {
         id: "movies-essentials",
         title: "Must See Films",
         mediaType: "movie",
-        // This row is intentionally mixed (Action/Adventure), so include both
-        filter: { includeGenreIds: [28, 12], allowMixed: true },
+        filter: {
+          includeGenreIds: [MOVIE_GENRES.ACTION, MOVIE_GENRES.ADVENTURE],
+          allowMixed: true,
+        },
         mode: "mix",
         modes: ["popular", "trending", "top_rated"],
         minVotes: 300,
@@ -44,9 +51,8 @@ const BROWSE_TABS = {
         title: "Action & Adventure",
         mediaType: "movie",
         filter: {
-          includeGenreIds: [28, 12],
-          // keep “family animation” from dominating this shelf
-          excludeGenreIds: [16, 10751],
+          includeGenreIds: [MOVIE_GENRES.ACTION, MOVIE_GENRES.ADVENTURE],
+          excludeGenreIds: [MOVIE_GENRES.ANIMATION, MOVIE_GENRES.FAMILY],
         },
         mode: "mix",
         modes: ["popular", "trending"],
@@ -56,9 +62,8 @@ const BROWSE_TABS = {
         title: "Comedies",
         mediaType: "movie",
         filter: {
-          includeGenreIds: [35],
-          // optional: avoid comedy-horror + heavy thrillers taking over
-          excludeGenreIds: [27],
+          includeGenreIds: [MOVIE_GENRES.COMEDY],
+          excludeGenreIds: [MOVIE_GENRES.HORROR],
         },
         mode: "mix",
         modes: ["popular", "trending"],
@@ -69,9 +74,8 @@ const BROWSE_TABS = {
         title: "Sci-fi & Fantasy",
         mediaType: "movie",
         filter: {
-          includeGenreIds: [878, 14],
-          // keep family animation out of sci-fi shelf
-          excludeGenreIds: [16, 10751],
+          includeGenreIds: [MOVIE_GENRES.SCIENCE_FICTION, MOVIE_GENRES.FANTASY],
+          excludeGenreIds: [MOVIE_GENRES.ANIMATION, MOVIE_GENRES.FAMILY],
         },
         mode: "mix",
         modes: ["popular", "top_rated", "trending"],
@@ -100,9 +104,8 @@ const BROWSE_TABS = {
         title: "Sitcoms",
         mediaType: "tv",
         filter: {
-          includeGenreIds: [35],
-          // common offenders that bleed into “comedy”
-          excludeGenreIds: [10763, 10764, 10767],
+          includeGenreIds: [TV_GENRES.COMEDY],
+          excludeGenreIds: EXCLUDE_TV_NON_SERIES,
           keywordQuery: "sitcom",
         },
         mode: "mix",
@@ -113,8 +116,8 @@ const BROWSE_TABS = {
         title: "Crime & Mystery",
         mediaType: "tv",
         filter: {
-          includeGenreIds: [80, 9648], // Crime + Mystery
-          excludeGenreIds: [10763, 10764, 10767],
+          includeGenreIds: [TV_GENRES.CRIME, TV_GENRES.MYSTERY],
+          excludeGenreIds: EXCLUDE_TV_NON_SERIES,
         },
         mode: "mix",
         modes: ["popular", "top_rated", "trending"],
@@ -125,8 +128,8 @@ const BROWSE_TABS = {
         title: "Drama",
         mediaType: "tv",
         filter: {
-          includeGenreIds: [18],
-          excludeGenreIds: [10763, 10764, 10767],
+          includeGenreIds: [TV_GENRES.DRAMA],
+          excludeGenreIds: EXCLUDE_TV_NON_SERIES,
         },
         mode: "mix",
         modes: ["popular", "top_rated", "trending"],
@@ -137,8 +140,8 @@ const BROWSE_TABS = {
         title: "Sci-fi & Fantasy",
         mediaType: "tv",
         filter: {
-          includeGenreIds: [10765], // TV Sci-Fi & Fantasy
-          excludeGenreIds: [10763, 10764, 10767],
+          includeGenreIds: [TV_GENRES.SCI_FI_FANTASY],
+          excludeGenreIds: EXCLUDE_TV_NON_SERIES,
         },
         mode: "mix",
         modes: ["popular", "top_rated", "trending"],
@@ -167,11 +170,11 @@ const BROWSE_TABS = {
         title: "Family Picks",
         mediaType: "movie",
         filter: {
-          includeGenreIds: [16, 10751],
+          includeGenreIds: [MOVIE_GENRES.ANIMATION, MOVIE_GENRES.FAMILY],
           requireAllInclude: true,
           certificationCountry: "US",
           certificationLte: "PG-13",
-        }, // Animation + Family (US <= PG-13)
+        },
         mode: "mix",
         modes: ["popular", "trending"],
       },
@@ -180,10 +183,10 @@ const BROWSE_TABS = {
         title: "Anime Series",
         mediaType: "tv",
         filter: {
-          includeGenreIds: [16],
+          includeGenreIds: [TV_GENRES.ANIMATION],
           originalLanguage: "ja",
           keywordQuery: "anime",
-          excludeGenreIds: [10763, 10764, 10767],
+          excludeGenreIds: EXCLUDE_TV_NON_SERIES,
         },
         mode: "mix",
         modes: ["popular", "top_rated", "trending"],
@@ -194,8 +197,8 @@ const BROWSE_TABS = {
         title: "Animated Shows",
         mediaType: "tv",
         filter: {
-          includeGenreIds: [16],
-          excludeGenreIds: [10763, 10764, 10767],
+          includeGenreIds: [TV_GENRES.ANIMATION],
+          excludeGenreIds: EXCLUDE_TV_NON_SERIES,
         },
         mode: "mix",
         modes: ["popular", "trending"],
@@ -204,7 +207,7 @@ const BROWSE_TABS = {
         id: "anim-movies",
         title: "Animated Movies",
         mediaType: "movie",
-        filter: { includeGenreIds: [16] },
+        filter: { includeGenreIds: [MOVIE_GENRES.ANIMATION] },
         mode: "mix",
         modes: ["popular", "top_rated", "trending"],
         minVotes: 300,
@@ -233,7 +236,7 @@ const BrowseSection = ({ onOpenDetails }) => {
         try {
           const backdropPath = await getBackdropPathForTitle(
             tabConfig.tmdbTitle,
-            tabConfig.mediaType
+            tabConfig.mediaType,
           );
 
           backgroundsByTabId[tabId] = backdropPath
@@ -347,7 +350,7 @@ const BrowseSection = ({ onOpenDetails }) => {
 
       {/* ROWS */}
       <div className="pb-10">
-        {activeConfig.rows.map((row) => (
+        {activeConfig.rows.map((row, index) => (
           <BrowseRow
             key={row.id}
             title={row.title}
@@ -356,6 +359,7 @@ const BrowseSection = ({ onOpenDetails }) => {
             mode={row.mode}
             modes={row.modes}
             minVotes={row.minVotes}
+            direction={index % 2 === 0 ? "left" : "right"}
             onOpenDetails={onOpenDetails}
           />
         ))}
