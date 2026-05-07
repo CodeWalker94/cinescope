@@ -1,10 +1,12 @@
+import { Link } from "react-router-dom";
+
 const PRIMARY_LINKS = [
-  { label: "Explore", href: "#" },
-  { label: "Movies", href: "#" },
-  { label: "TV Shows", href: "#" },
-  { label: "Animation", href: "#" },
-  { label: "Collections", href: "#" },
-  { label: "Plans", href: "#plans" },
+  { label: "Explore", to: "/search" },
+  { label: "Movies", to: "/search?tab=movie" },
+  { label: "TV Shows", to: "/search?tab=tv" },
+  { label: "Animation", to: "/search?tab=animation" },
+  { label: "Watchlist", to: "/search" },
+  { label: "Plans", to: "/plans" },
 ];
 
 const SECONDARY_LINKS = [
@@ -49,9 +51,9 @@ const Footer = () => {
           <ul className="flex flex-wrap justify-center gap-3 sm:gap-4">
             {PRIMARY_LINKS.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className={pillClassName}>
+                <Link to={link.to} className={pillClassName}>
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

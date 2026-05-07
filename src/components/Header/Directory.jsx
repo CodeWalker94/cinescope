@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const Directory = ({ layout = "horizontal" }) => {
   const baseClasses =
     "text-lg content-center font-medium text-[clamp(0.875rem,2vw,1rem)]";
@@ -7,23 +9,31 @@ const Directory = ({ layout = "horizontal" }) => {
       ? "flex items-center gap-8"
       : "flex flex-col items-start gap-3";
 
+  const linkClass =
+    "text-white/80 hover:text-white transition-colors duration-150";
+
   return (
     <div>
       <ul className={`${layoutClasses} ${baseClasses}`}>
         <li>
-          <a href="#" onClick={(e) => e.preventDefault()}>
+          <Link to="/search?tab=movie" className={linkClass}>
             Movies
-          </a>
+          </Link>
         </li>
         <li>
-          <a href="#" onClick={(e) => e.preventDefault()}>
+          <Link to="/search?tab=tv" className={linkClass}>
             TV Shows
-          </a>
+          </Link>
         </li>
         <li>
-          <a href="#" onClick={(e) => e.preventDefault()}>
-            Animated
-          </a>
+          <Link to="/search?tab=animation" className={linkClass}>
+            Animation
+          </Link>
+        </li>
+        <li>
+          <Link to="/search" className={linkClass}>
+            Browse
+          </Link>
         </li>
       </ul>
     </div>

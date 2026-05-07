@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { discoverTitles, getTrendingTitles } from "../API/tmdb";
 import { shuffle } from "../utils/titleHelpers";
 
-const MAX_ITEMS = 16;
+const MAX_ITEMS = 40;
 const ROW_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_VERSION = "v10"; // bump when item shape changes
 
 // Module-level: lives outside the component so it survives re-renders and re-mounts.
 const rowResultCache = new Map();
@@ -127,7 +128,7 @@ function buildWeightedMix({ popular, trending, topRated }, limit = MAX_ITEMS) {
 
 // Fetches pages sequentially until `needed` items are collected or `maxPages` is hit.
 // Stops early to avoid unnecessary requests.
-async function collectEnoughPages(fetchPageFn, { maxPages = 3, needed = 24 }) {
+async function collectEnoughPages(fetchPageFn, { maxPages = 3, needed = 60 }) {
   const all = [];
   for (let page = 1; page <= maxPages; page++) {
     const results = await fetchPageFn(page);
@@ -163,9 +164,12 @@ export function useBrowseRowData({
   const keywordQuery = filter?.keywordQuery;
   const certificationCountry = filter?.certificationCountry;
   const certificationLte = filter?.certificationLte;
+  const certificationGte = filter?.certificationGte;
+  const yearGte = filter?.yearGte;
+  const yearLte = filter?.yearLte;
 
   const effectiveMinVotes =
-    typeof minVotes === "number" ? minVotes : mediaType === "tv" ? 200 : 500;
+    typeof minVotes === "number" ? minVotes : mediaType === "tv" ? 50 : 100;
 
   const hasShelf = Array.isArray(includeGenreIds) && includeGenreIds.length > 0;
 
@@ -177,21 +181,28 @@ export function useBrowseRowData({
       ? excludeGenreIds.join(",")
       : "";
     const modesKey = Array.isArray(modes) ? modes.join("|") : "";
-    return [
-      title,
-      mediaType,
-      mode,
-      modesKey,
-      includeKey,
-      excludeKey,
-      allowMixed ? "mixed" : "strict",
-      requireAllInclude ? "all" : "any",
-      certificationCountry ?? "",
-      certificationLte ?? "",
-      String(effectiveMinVotes),
-      originalLanguage ?? "",
-      keywordQuery ?? "",
-    ].join("::");
+    return (
+      [
+        title,
+        mediaType,
+        mode,
+        modesKey,
+        includeKey,
+        excludeKey,
+        allowMixed ? "mixed" : "strict",
+        requireAllInclude ? "all" : "any",
+        certificationCountry ?? "",
+        certificationLte ?? "",
+        certificationGte ?? "",
+        yearGte ? String(yearGte) : "",
+        yearLte ? String(yearLte) : "",
+        String(effectiveMinVotes),
+        originalLanguage ?? "",
+        keywordQuery ?? "",
+      ].join("::") +
+      "::" +
+      CACHE_VERSION
+    );
   }, [
     title,
     mediaType,
@@ -203,6 +214,9 @@ export function useBrowseRowData({
     requireAllInclude,
     certificationCountry,
     certificationLte,
+    certificationGte,
+    yearGte,
+    yearLte,
     effectiveMinVotes,
     originalLanguage,
     keywordQuery,
@@ -236,8 +250,11 @@ export function useBrowseRowData({
               : undefined,
             originalLanguage,
             keywordQuery,
+            yearGte,
+            yearLte,
             certificationCountry,
             certificationLte,
+            certificationGte,
           }),
         { maxPages, needed: 30 },
       );
@@ -253,7 +270,9 @@ export function useBrowseRowData({
     };
 
     const applyShelfRules = (list) => {
-      if (!hasShelf) return list;
+      const hasExclude =
+        Array.isArray(excludeGenreIds) && excludeGenreIds.length > 0;
+      if (!hasShelf && !hasExclude) return list;
       return filterByShelfRules(list, {
         includeGenreIds,
         excludeGenreIds,
@@ -308,11 +327,11 @@ export function useBrowseRowData({
           // Only request the buckets this row actually needs; unused ones resolve instantly.
           const [popularRaw, trendingRaw, topRatedRaw] = await Promise.all([
             wantsPopular
-              ? loadDiscoverPaged("popularity.desc", 1)
+              ? loadDiscoverPaged("popularity.desc", 2)
               : Promise.resolve([]),
-            wantsTrending ? loadTrendingPaged(1) : Promise.resolve([]),
+            wantsTrending ? loadTrendingPaged(2) : Promise.resolve([]),
             wantsTopRated
-              ? loadDiscoverPaged("vote_average.desc", 1)
+              ? loadDiscoverPaged("vote_average.desc", 2)
               : Promise.resolve([]),
           ]);
 
@@ -320,25 +339,48 @@ export function useBrowseRowData({
           const topRated = uniqueById(applyShelfRules(topRatedRaw));
           const trending = uniqueById(applyShelfRules(trendingRaw));
 
+          // Language post-filter — trending endpoint doesn't support with_original_language,
+          // so we apply it client-side when the row requests a specific language.
+          const applyLang = (list) =>
+            originalLanguage
+              ? list.filter(
+                  (item) => item.original_language === originalLanguage,
+                )
+              : list;
+
+          const popularLang = applyLang(popular);
+          const topRatedLang = applyLang(topRated);
+          const trendingLang = applyLang(trending);
+
           let built = [];
           if (mode === "mix") {
             built = buildWeightedMix(
-              { popular, trending, topRated },
+              {
+                popular: popularLang,
+                trending: trendingLang,
+                topRated: topRatedLang,
+              },
               MAX_ITEMS,
             );
           } else if (mode === "trending") {
-            built = trending.slice(0, MAX_ITEMS);
+            built = trendingLang.slice(0, MAX_ITEMS);
             if (built.length < 10)
               // backfill with popular if trending is sparse
-              built = uniqueById([...built, ...popular]).slice(0, MAX_ITEMS);
+              built = uniqueById([...built, ...popularLang]).slice(
+                0,
+                MAX_ITEMS,
+              );
           } else if (mode === "top_rated") {
-            built = topRated.slice(0, MAX_ITEMS);
+            built = topRatedLang.slice(0, MAX_ITEMS);
           } else {
-            built = popular.slice(0, MAX_ITEMS);
+            built = popularLang.slice(0, MAX_ITEMS);
           }
 
           built = await fillIfTooSmall(built);
-          return built;
+          // Tag every item with media_type so modal opens the correct endpoint
+          return built.map((item) =>
+            item.media_type ? item : { ...item, media_type: mediaType },
+          );
         });
 
         if (cancelled) return;

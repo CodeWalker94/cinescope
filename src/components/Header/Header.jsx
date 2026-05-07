@@ -2,14 +2,16 @@ import Directory from "./Directory.jsx";
 import Auth from "./Auth.jsx";
 import Logo from "../Hero/Logo.jsx";
 import Search from "../Search.jsx";
+import { useNavigate } from "react-router-dom";
 import MobileMenu from "./MobileMenu.jsx";
 import { useState, useEffect } from "react";
 
 const Header = ({ className = "" }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
-   useEffect(() => {
+  useEffect(() => {
     if (isMenuOpen) {
       document.body.classList.add("overflow-hidden");
     } else {
@@ -21,7 +23,6 @@ const Header = ({ className = "" }) => {
       document.body.classList.remove("overflow-hidden");
     };
   }, [isMenuOpen]);
-
 
   return (
     <header
@@ -35,7 +36,7 @@ const Header = ({ className = "" }) => {
         <button
           type="button"
           className="md:hidden relative z-40 inline-flex items-center justify-center p-2 rounded-md bg-black/40 border border-white/10"
-          onClick={() => setIsMenuOpen(prev => !prev)}
+          onClick={() => setIsMenuOpen((prev) => !prev)}
           aria-label="Toggle navigation menu"
         >
           <span className="sr-only">Toggle navigation</span>
@@ -76,6 +77,9 @@ const Header = ({ className = "" }) => {
           <Search
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
+            onSubmit={(term) =>
+              navigate(`/search?q=${encodeURIComponent(term)}`)
+            }
           />
         </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import TitleCard from "./TitleCard";
 import SkeletonCard from "./SkeletonCard";
@@ -25,6 +26,7 @@ const BrowseRow = ({
 
   minVotes,
   direction = "left",
+  browseLink,
 
   onOpenDetails,
 }) => {
@@ -138,12 +140,12 @@ const BrowseRow = ({
           )}
         </div>
 
-        <button
-          type="button"
+        <Link
+          to={browseLink}
           className="text-xs sm:text-sm text-cine-muted hover:text-white transition-colors"
         >
           Browse more →
-        </button>
+        </Link>
       </div>
 
       {/* Arrows */}
@@ -188,7 +190,7 @@ const BrowseRow = ({
               <TitleCard
                 key={item.id}
                 item={item}
-                mediaType={mediaType}
+                mediaType={item.media_type || mediaType}
                 onOpenDetails={onOpenDetails}
                 isMenuOpen={openMenuItemId === item.id}
                 isActive={activeItemId === item.id}

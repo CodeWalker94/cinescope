@@ -38,6 +38,27 @@ export const getTrendingTitles = async (
   return res.data?.results ?? [];
 };
 
+export const searchTmdb = async (query, mediaType = "multi", page = 1) => {
+  if (!query || !query.trim()) return [];
+
+  const endpoint =
+    mediaType === "tv"
+      ? "/search/tv"
+      : mediaType === "movie"
+        ? "/search/movie"
+        : "/search/multi";
+
+  const res = await tmdbClient.get(endpoint, {
+    params: {
+      query,
+      include_adult: false,
+      page,
+    },
+  });
+
+  return res.data?.results ?? [];
+};
+
 /**
  * ============================================================
  * DETAILS
@@ -154,6 +175,7 @@ export const getKeywordId = async (keywordQuery) => {
  * - minVotes (to avoid "top rated" junk with 4 votes)
  * - originalLanguage (ex: "ja" for anime)
  * - keywordQuery (ex: "anime" -> looks up keyword id -> with_keywords)
+ * - yearGte / yearLte (ex: yearLte: 2000 for classics)
  */
 export const discoverTitles = async ({
   mediaType = "movie",
@@ -169,11 +191,18 @@ export const discoverTitles = async ({
   originalLanguage,
   keywordQuery,
 
+  // date range (year)
+  yearGte,
+  yearLte,
+
   // movie-only refiners
   certificationCountry,
   certificationLte,
+  // TV content rating (e.g. certificationGte: "TV-14" to exclude kids shows)
+  certificationGte,
 }) => {
   const endpoint = mediaType === "tv" ? "/discover/tv" : "/discover/movie";
+  const isTv = mediaType === "tv";
 
   // Convert keywordQuery -> keywordId once
   const keywordId = keywordQuery ? await getKeywordId(keywordQuery) : null;
@@ -187,6 +216,10 @@ export const discoverTitles = async ({
     Array.isArray(excludeGenreIds) && excludeGenreIds.length > 0
       ? excludeGenreIds.join(",")
       : "";
+
+  // Map year bounds to the right TMDB param name depending on media type
+  const dateGteKey = isTv ? "first_air_date.gte" : "primary_release_date.gte";
+  const dateLteKey = isTv ? "first_air_date.lte" : "primary_release_date.lte";
 
   const res = await tmdbClient.get(endpoint, {
     params: {
@@ -207,12 +240,20 @@ export const discoverTitles = async ({
       ...(originalLanguage ? { with_original_language: originalLanguage } : {}),
       ...(keywordId ? { with_keywords: keywordId } : {}),
 
+      // Date range
+      ...(yearGte ? { [dateGteKey]: `${yearGte}-01-01` } : {}),
+      ...(yearLte ? { [dateLteKey]: `${yearLte}-12-31` } : {}),
+
       // Movie certifications (MPAA-like). TV discover does not support these.
       ...(mediaType === "movie" && certificationCountry
         ? { certification_country: certificationCountry }
         : {}),
       ...(mediaType === "movie" && certificationLte
         ? { "certification.lte": certificationLte }
+        : {}),
+      // TV content ratings (US: TV-Y, TV-G, TV-PG, TV-14, TV-MA)
+      ...(mediaType === "tv" && certificationGte
+        ? { certification_country: "US", "certification.gte": certificationGte }
         : {}),
     },
   });

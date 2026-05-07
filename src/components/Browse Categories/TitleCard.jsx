@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { MdImageNotSupported } from "react-icons/md";
 import AddToPlaylistMenu from "./AddToPlaylistMenu";
 import { getTitle } from "../../utils/titleHelpers";
 
@@ -88,7 +89,15 @@ const TitleCard = ({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="h-full w-full bg-white/5" />
+          <div className="absolute inset-0 bg-gradient-to-b from-cine-accent to-cine-scope flex flex-col items-center justify-center gap-2 p-3">
+            <MdImageNotSupported className="text-white/30 text-4xl shrink-0" />
+            <span className="text-white/40 text-[10px] font-black uppercase tracking-widest text-center leading-tight">
+              No Poster
+            </span>
+            <span className="text-white text-xs font-bold text-center line-clamp-3 leading-snug">
+              {title}
+            </span>
+          </div>
         )}
 
         {/* Hover glow */}

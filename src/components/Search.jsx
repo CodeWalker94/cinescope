@@ -1,6 +1,6 @@
-const Search = ({searchTerm, setSearchTerm}) => {
+const Search = ({ searchTerm, setSearchTerm, onSubmit }) => {
   return (
-    <div className='search'>
+    <div className="search">
       <div>
         {/* Magnifying Glass Icon */}
         <img
@@ -9,14 +9,19 @@ const Search = ({searchTerm, setSearchTerm}) => {
           className="pointer-events-none"
         />
 
-        <input type="text" 
-        placeholder='Browse movies'
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+        <input
+          type="text"
+          placeholder="Browse movies"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && typeof onSubmit === "function")
+              onSubmit(searchTerm);
+          }}
+        />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Search
+export default Search;

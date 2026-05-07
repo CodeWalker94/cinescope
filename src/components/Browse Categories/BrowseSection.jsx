@@ -1,5 +1,6 @@
 // src/components/Browse Categories/BrowseSection.jsx
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getBackdropPathForTitle } from "../../API/tmdb";
 import {
   MOVIE_GENRES,
@@ -186,7 +187,7 @@ const BROWSE_TABS = {
           includeGenreIds: [TV_GENRES.ANIMATION],
           originalLanguage: "ja",
           keywordQuery: "anime",
-          excludeGenreIds: EXCLUDE_TV_NON_SERIES,
+          excludeGenreIds: [TV_GENRES.TALK, TV_GENRES.NEWS, TV_GENRES.REALITY],
         },
         mode: "mix",
         modes: ["popular", "top_rated", "trending"],
@@ -198,7 +199,7 @@ const BROWSE_TABS = {
         mediaType: "tv",
         filter: {
           includeGenreIds: [TV_GENRES.ANIMATION],
-          excludeGenreIds: EXCLUDE_TV_NON_SERIES,
+          excludeGenreIds: [TV_GENRES.TALK, TV_GENRES.NEWS, TV_GENRES.REALITY],
         },
         mode: "mix",
         modes: ["popular", "trending"],
@@ -216,7 +217,14 @@ const BROWSE_TABS = {
   },
 };
 
+const TAB_ROUTE = {
+  movies: "/search?tab=movie",
+  tv: "/search?tab=tv",
+  animation: "/search?tab=animation",
+};
+
 const BrowseSection = ({ onOpenDetails }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("movies");
   const [heroBackgrounds, setHeroBackgrounds] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -334,6 +342,7 @@ const BrowseSection = ({ onOpenDetails }) => {
 
           <button
             type="button"
+            onClick={() => navigate(TAB_ROUTE[activeTab] ?? "/search")}
             className="
               inline-flex items-center justify-center
               px-6 py-3 rounded-full
@@ -360,6 +369,7 @@ const BrowseSection = ({ onOpenDetails }) => {
             modes={row.modes}
             minVotes={row.minVotes}
             direction={index % 2 === 0 ? "left" : "right"}
+            browseLink={`/search?genre=${row.filter?.includeGenreIds?.[0]}&type=${row.mediaType}`}
             onOpenDetails={onOpenDetails}
           />
         ))}
