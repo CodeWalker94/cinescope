@@ -6,7 +6,6 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
 
-  // GitHub Pages project sites are served from `/<repo-name>/`.
-  // If you rename the repo, update this value to match.
-  base: "/cinescope/",
+  // Vercel serves from root. Use "/" here.
+  base: "/",
 });
