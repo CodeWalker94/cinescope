@@ -2,7 +2,7 @@ import Directory from "./Directory.jsx";
 import Auth from "./Auth.jsx";
 import Logo from "../Hero/Logo.jsx";
 import Search from "../Search.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import MobileMenu from "./MobileMenu.jsx";
 import { useState, useEffect } from "react";
 
@@ -72,6 +72,16 @@ const Header = ({ className = "" }) => {
 
       {/* RIGHT */}
       <div className="flex items-center justify-end whitespace-nowrap gap-3">
+        {/* Browse link */}
+        <div className="hidden md:block">
+          <Link
+            to="/search"
+            className="text-white/80 hover:text-white transition-colors duration-150 text-[clamp(0.875rem,2vw,1rem)] font-medium"
+          >
+            Browse
+          </Link>
+        </div>
+
         {/* Desktop search */}
         <div className="hidden md:block max-w-[220px]">
           <Search

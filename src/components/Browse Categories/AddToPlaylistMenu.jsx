@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { useKey } from "../../hooks/useKey";
 
-const AddToPlaylistMenu = ({ anchorRef, onAddToCollection, onClose }) => {
+const AddToPlaylistMenu = ({ anchorRef, onAddToCollection, onClose, inWatchlist = false }) => {
   const menuRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const [menuWidth, setMenuWidth] = useState(180);
@@ -106,8 +106,8 @@ const AddToPlaylistMenu = ({ anchorRef, onAddToCollection, onClose }) => {
           rounded-lg
         "
       >
-        <Plus className="h-4 w-4" />
-        Add to collection
+        {inWatchlist ? <Check className="h-4 w-4 text-cine-highlight" /> : <Plus className="h-4 w-4" />}
+        {inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
       </button>
     </div>,
     document.body,

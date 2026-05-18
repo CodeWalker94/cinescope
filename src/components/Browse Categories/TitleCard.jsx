@@ -2,6 +2,8 @@ import { useRef } from "react";
 import { MdImageNotSupported } from "react-icons/md";
 import AddToPlaylistMenu from "./AddToPlaylistMenu";
 import { getTitle } from "../../utils/titleHelpers";
+import { addToWatchlist, removeFromWatchlist, isInWatchlist } from "../../utils/watchlistStorage";
+import toast from "react-hot-toast";
 
 const buildPosterUrl = (posterPath) =>
   posterPath ? `https://image.tmdb.org/t/p/w342${posterPath}` : null;
@@ -169,14 +171,16 @@ const TitleCard = ({
             <AddToPlaylistMenu
               anchorRef={menuButtonRef}
               onClose={handleCloseMenu}
+              inWatchlist={isInWatchlist(item?.id, mediaType)}
               onAddToCollection={() => {
-                console.log("Add to collection:", {
-                  id: item?.id,
-                  mediaType,
-                  title,
-                });
+                if (isInWatchlist(item?.id, mediaType)) {
+                  removeFromWatchlist(item?.id, mediaType);
+                  toast(`Removed "${title}" from your Watchlist`);
+                } else {
+                  addToWatchlist({ id: item?.id, mediaType, title, poster_path: item?.poster_path });
+                  toast.success(`Added "${title}" to your Watchlist`);
+                }
               }}
-              // onAddToWatchlist={() => {}}
             />
           )}
         </div>

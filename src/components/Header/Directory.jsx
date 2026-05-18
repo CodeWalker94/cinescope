@@ -31,8 +31,8 @@ const Directory = ({ layout = "horizontal" }) => {
           </Link>
         </li>
         <li>
-          <Link to="/search" className={linkClass}>
-            Browse
+          <Link to="/watchlist" className={linkClass}>
+            Watchlist
           </Link>
         </li>
       </ul>

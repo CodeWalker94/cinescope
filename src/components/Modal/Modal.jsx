@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ThumbsDown, ThumbsUp, X, Plus } from "lucide-react";
+import { ThumbsDown, ThumbsUp, X, Plus, Check } from "lucide-react";
 
 import { useModalData } from "../../hooks/useModalData";
 import { useKey } from "../../hooks/useKey";
+import { addToWatchlist, removeFromWatchlist, isInWatchlist } from "../../utils/watchlistStorage";
+import toast from "react-hot-toast";
 
 const TMDB_IMG_W185 = "https://image.tmdb.org/t/p/w185";
 
@@ -84,6 +86,7 @@ const Modal = ({ isOpen, onClose, selection }) => {
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
   const [canExpandOverview, setCanExpandOverview] = useState(false);
   const [isCastExpanded, setIsCastExpanded] = useState(false);
+  const [inWatchlist, setInWatchlist] = useState(false);
 
   const {
     details,
@@ -110,7 +113,8 @@ const Modal = ({ isOpen, onClose, selection }) => {
     if (!isOpen) return;
     setIsOverviewExpanded(false);
     setIsCastExpanded(false);
-  }, [isOpen, id]);
+    setInWatchlist(isInWatchlist(id, mediaType));
+  }, [isOpen, id, mediaType]);
 
   // Scroll lock
   useEffect(() => {
@@ -304,6 +308,17 @@ const Modal = ({ isOpen, onClose, selection }) => {
 
                           <button
                             type="button"
+                            onClick={() => {
+                              if (inWatchlist) {
+                                removeFromWatchlist(id, mediaType);
+                                setInWatchlist(false);
+                                toast(`Removed "${titleText}" from your Watchlist`);
+                              } else {
+                                addToWatchlist({ id, mediaType, title: titleText, poster_path: details?.poster_path || selection?.poster_path });
+                                setInWatchlist(true);
+                                toast.success(`Added "${titleText}" to your Watchlist`);
+                              }
+                            }}
                             className="
                               inline-flex items-center gap-2
                               h-10 px-4 rounded-full
@@ -313,10 +328,10 @@ const Modal = ({ isOpen, onClose, selection }) => {
                               transition-colors
                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cine-highlight/60
                             "
-                            aria-label="Add to Watchlist"
+                            aria-label={inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
                           >
-                            <Plus className="h-4 w-4" />
-                            Add to Watchlist
+                            {inWatchlist ? <Check className="h-4 w-4 text-cine-highlight" /> : <Plus className="h-4 w-4" />}
+                            {inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
                           </button>
                         </div>
                       </div>
