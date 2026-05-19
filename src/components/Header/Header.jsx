@@ -5,6 +5,7 @@ import Search from "../Search.jsx";
 import { useNavigate, Link } from "react-router-dom";
 import MobileMenu from "./MobileMenu.jsx";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 const Header = ({ className = "" }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,10 +33,17 @@ const Header = ({ className = "" }) => {
 
       {/* LEFT */}
       <div className="flex justify-start items-center gap-2">
-        {/* MOBILE HAMBURGER – transforms into X */}
+        {/* Desktop nav */}
+        <div className="hidden md:block">
+          <Directory />
+        </div>
+      </div>
+
+      {/* MOBILE HAMBURGER – portaled to body so it stays above the menu overlay on all pages */}
+      {createPortal(
         <button
           type="button"
-          className="md:hidden relative z-40 inline-flex items-center justify-center p-2 rounded-md bg-black/40 border border-white/10"
+          className="md:hidden fixed top-4 left-5 z-[110] inline-flex items-center justify-center p-2 rounded-md bg-black/40 border border-white/10"
           onClick={() => setIsMenuOpen((prev) => !prev)}
           aria-label="Toggle navigation menu"
         >
@@ -57,13 +65,9 @@ const Header = ({ className = "" }) => {
               }`}
             />
           </div>
-        </button>
-
-        {/* Desktop nav */}
-        <div className="hidden md:block">
-          <Directory />
-        </div>
-      </div>
+        </button>,
+        document.body,
+      )}
 
       {/* CENTER */}
       <div className="flex justify-center">
@@ -101,6 +105,11 @@ const Header = ({ className = "" }) => {
         isOpen={isMenuOpen}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        onSubmit={(term) => {
+          setIsMenuOpen(false);
+          navigate(`/search?q=${encodeURIComponent(term)}`);
+        }}
+        onClose={() => setIsMenuOpen(false)}
       />
     </header>
   );

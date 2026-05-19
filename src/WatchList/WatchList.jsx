@@ -38,7 +38,7 @@ const WatchList = () => {
             No titles saved yet. Hit the + on any card or in a title's details to add it here.
           </p>
         ) : (
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
             {watchlist.map((item) => (
               <TitleCard
                 key={`${item.mediaType}:${item.id}`}

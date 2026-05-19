@@ -5,7 +5,7 @@ const PRIMARY_LINKS = [
   { label: "Movies", to: "/search?tab=movie" },
   { label: "TV Shows", to: "/search?tab=tv" },
   { label: "Animation", to: "/search?tab=animation" },
-  { label: "Watchlist", to: "/search" },
+  { label: "Watchlist", to: "/watchlist" },
   { label: "Plans", to: "/plans" },
 ];
 

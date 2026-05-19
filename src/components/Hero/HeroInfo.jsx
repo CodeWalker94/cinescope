@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
   getTitle,
   getYear,
@@ -5,15 +7,46 @@ import {
   formatScore,
   inferMediaType,
 } from "../../utils/titleHelpers";
+import {
+  addToWatchlist,
+  removeFromWatchlist,
+  isInWatchlist,
+} from "../../utils/watchlistStorage";
 
 const HeroInfo = ({ movie, onOpenDetails }) => {
+  const mediaType = inferMediaType(movie);
+  const movieId = movie?.id;
+
+  const [inWatchlist, setInWatchlist] = useState(() =>
+    movieId ? isInWatchlist(movieId, mediaType) : false,
+  );
+
+  // Sync when movie changes or storage updates from elsewhere
+  useEffect(() => {
+    if (!movieId) return;
+    const sync = () => setInWatchlist(isInWatchlist(movieId, mediaType));
+    sync();
+    window.addEventListener("watchlist-change", sync);
+    return () => window.removeEventListener("watchlist-change", sync);
+  }, [movieId, mediaType]);
+
   if (!movie) return null;
 
   const title = getTitle(movie);
   const year = getYear(movie);
   const rating = formatScore(movie.vote_average);
-  const isTv = inferMediaType(movie) === "tv";
+  const isTv = mediaType === "tv";
   const mediaTypeLabel = isTv ? "Series" : "Movie";
+
+  const handleWatchlistToggle = () => {
+    if (inWatchlist) {
+      removeFromWatchlist(movieId, mediaType);
+      toast(`Removed "${title}" from your Watchlist`);
+    } else {
+      addToWatchlist({ id: movieId, mediaType, title, poster_path: movie.poster_path });
+      toast.success(`Added "${title}" to your Watchlist`);
+    }
+  };
 
   // =============================
   // NEW → CERTIFICATION LOGIC
@@ -109,10 +142,13 @@ const HeroInfo = ({ movie, onOpenDetails }) => {
           </button>
 
           <button
-            className="hero-btn hero-btn-tertiary"
-            aria-label="Add to My List"
+            type="button"
+            onClick={handleWatchlistToggle}
+            className={`hero-btn hero-btn-tertiary ${inWatchlist ? "bg-white/15 border-cine-highlight text-cine-highlight" : ""}`}
+            aria-label={inWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+            aria-pressed={inWatchlist}
           >
-            <span className="hero-btn-icon">＋</span>
+            <span className="hero-btn-icon">{inWatchlist ? "−" : "＋"}</span>
           </button>
         </div>
       </div>
